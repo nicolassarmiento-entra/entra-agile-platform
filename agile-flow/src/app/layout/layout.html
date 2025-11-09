@@ -1,0 +1,33 @@
+<!-- Navigation -->
+<nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <h1 class="text-2xl font-bold gradient-text">AgileFlow</h1>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <div class="ml-10 flex items-baseline space-x-8">
+                    <a routerLink="/" class="nav-link text-gray-900 font-medium">Dashboard</a>
+                    <a routerLink="/sprints" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Sprints</a>
+                    <a routerLink="/kanban" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Kanban</a>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="bg-amber-400 hover:bg-amber-500 text-gray-900 px-4 py-2 rounded-lg font-medium transition-colors">
+                    New Project
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<router-outlet></router-outlet>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white py-8 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p class="text-gray-400">&copy; 2024 AgileFlow. Streamlining agile project management for modern teams.</p>
+    </div>
+</footer>
