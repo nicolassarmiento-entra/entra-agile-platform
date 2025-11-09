@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgileFlow - Kanban Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .kanban-column { min-height: 600px; }
+        .story-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: grab; }
+        .story-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .story-card:active { cursor: grabbing; }
+        .gradient-text { background: linear-gradient(135deg, #1a365d, #319795); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-link { position: relative; }
+        .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background: #f6ad55; transition: width 0.3s ease; }
+        .nav-link:hover::after { width: 100%; }
+        .priority-high { border-left: 4px solid #ef4444; }
+        .priority-medium { border-left: 4px solid #f59e0b; }
+        .priority-low { border-left: 4px solid #10b981; }
+        .column-pending { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .column-doing { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+        .column-done { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .drag-over { background-color: rgba(49, 151, 149, 0.1); border: 2px dashed #319795; }
+        .story-points { background: linear-gradient(135deg, #f6ad55, #ed8936); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold gradient-text">AgileFlow</h1>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="index.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Dashboard</a>
+                        <a href="sprints.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Sprints</a>
+                        <a href="kanban.html" class="nav-link text-gray-900 font-medium">Kanban</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="openStoryModal()" class="bg-amber-400 hover:bg-amber-500 text-gray-900 px-4 py-2 rounded-lg font-medium transition-colors">
+                        New Story
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">Kanban Board</h1>
+                    <p class="text-teal-100 mt-2">Manage user stories with drag-and-drop simplicity</p>
+                </div>
+                <div class="flex space-x-4">
+                    <select id="projectSelect" class="px-4 py-2 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-amber-400">
+                        <option value="all">All Projects</option>
+                        <option value="proj-001">E-commerce Platform</option>
+                        <option value="proj-002">Mobile Banking App</option>
+                        <option value="proj-003">Healthcare Portal</option>
+                    </select>
+                    <select id="sprintSelect" class="px-4 py-2 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-amber-400">
+                        <option value="all">All Sprints</option>
+                        <option value="spr-002">Sprint 2: Core Features</option>
+                        <option value="spr-003">Sprint 1: Security & Auth</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kanban Board -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Pending Column -->
+            <div class="kanban-column">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="column-pending px-4 py-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-900">Pending</h3>
+                            <span id="pendingCount" class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium">0</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">User stories waiting to be started</p>
+                    </div>
+                    <div id="pendingColumn" class="p-4 space-y-3 min-h-96">
+                        <!-- Stories will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doing Column -->
+            <div class="kanban-column">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="column-doing px-4 py-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-900">Doing</h3>
+                            <span id="doingCount" class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium">0</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">Stories currently in progress</p>
+                    </div>
+                    <div id="doingColumn" class="p-4 space-y-3 min-h-96">
+                        <!-- Stories will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Done Column -->
+            <div class="kanban-column">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="column-done px-4 py-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-900">Done</h3>
+                            <span id="doneCount" class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium">0</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">Completed user stories</p>
+                    </div>
+                    <div id="doneColumn" class="p-4 space-y-3 min-h-96">
+                        <!-- Stories will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <section class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Board Analytics</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Story Distribution</h3>
+                    <div id="storyDistributionChart" style="height: 250px;"></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Priority Breakdown</h3>
+                    <div id="priorityChart" style="height: 250px;"></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Performance</h3>
+                    <div id="performanceChart" style="height: 250px;"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- User Story Creation Modal -->
+    <div id="storyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 transform transition-all">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">Create User Story</h3>
+                    <button onclick="closeStoryModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form id="storyForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Story Title</label>
+                        <input type="text" id="storyTitle" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                        <select id="storyProject" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            <option value="">Select Project</option>
+                            <option value="proj-001">E-commerce Platform</option>
+                            <option value="proj-002">Mobile Banking App</option>
+                            <option value="proj-003">Healthcare Portal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="storyDescription" rows="3" placeholder="As a [user], I want [goal] so that [reason]"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select id="storyPriority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                <option value="high">High</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Story Points</label>
+                            <select id="storyPoints" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="5">5</option>
+                                <option value="8" selected>8</option>
+                                <option value="13">13</option>
+                                <option value="21">21</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
+                        <select id="storyAssignee" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            <option value="">Unassigned</option>
+                            <option value="Sarah Chen">Sarah Chen</option>
+                            <option value="Mike Rodriguez">Mike Rodriguez</option>
+                            <option value="Alex Kim">Alex Kim</option>
+                            <option value="Emma Davis">Emma Davis</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="closeStoryModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
+                            Create Story
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Details Modal -->
+    <div id="storyDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 transform transition-all max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="storyDetailsTitle" class="text-2xl font-semibold text-gray-900"></h3>
+                    <button onclick="closeStoryDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Description</h4>
+                            <p id="storyDetailsDescription" class="text-gray-700"></p>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Acceptance Criteria</h4>
+                            <div id="storyDetailsCriteria" class="space-y-2">
+                                <!-- Criteria will be rendered here -->
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Tasks</h4>
+                            <div id="storyDetailsTasks" class="space-y-2">
+                                <!-- Tasks will be rendered here -->
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button onclick="openBugModal()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                Add Bug
+                            </button>
+                            <button onclick="openTaskModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                Add Task
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Story Info</h4>
+                            <div id="storyInfo" class="space-y-2 text-sm">
+                                <!-- Story information will be rendered here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Actions</h4>
+                            <div class="space-y-2">
+                                <button onclick="editStory()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                                    Edit Story
+                                </button>
+                                <button onclick="moveStory()" class="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
+                                    Move to Sprint
+                                </button>
+                                <button onclick="deleteStory()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                    Delete Story
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bug Creation Modal -->
+    <div id="bugModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 transform transition-all">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">Add Bug</h3>
+                    <button onclick="closeBugModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form id="bugForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bug Title</label>
+                        <input type="text" id="bugTitle" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+                        <select id="bugSeverity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Steps to Reproduce</label>
+                        <textarea id="bugSteps" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
+                    </div>
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="closeBugModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            Add Bug
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Creation Modal -->
+    <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 transform transition-all">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">Add Task</h3>
+                    <button onclick="closeTaskModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form id="taskForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                        <input type="text" id="taskTitle" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Task Type</label>
+                        <select id="taskType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="development">Development</option>
+                            <option value="testing">Testing</option>
+                            <option value="design">Design</option>
+                            <option value="documentation">Documentation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Estimated Hours</label>
+                        <input type="number" id="taskHours" min="1" max="40" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="closeTaskModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Add Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2024 AgileFlow. Streamlining agile project management for modern teams.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+    <script>
+        // Kanban-specific functionality
+        let currentStory = null;
+        let draggedElement = null;
+
+        // Extended sample user stories for Kanban board
+        const extendedUserStories = [
+            {
+                id: 'story-001',
+                projectId: 'proj-001',
+                sprintId: 'spr-002',
+                title: 'Implement secure user registration',
+                description: 'As a new user, I want to register with email verification so that my account is secure',
+                priority: 'high',
+                status: 'doing',
+                storyPoints: 8,
+                assignee: 'Sarah Chen',
+                acceptanceCriteria: [
+                    'Email validation works correctly',
+                    'Password strength requirements met',
+                    'Verification email sent within 1 minute',
+                    'User can login after verification'
+                ],
+                tasks: [
+                    'Frontend form validation',
+                    'Backend API endpoint',
+                    'Email service integration',
+                    'Unit testing'
+                ],
+                bugs: []
+            },
+            {
+                id: 'story-002',
+                projectId: 'proj-001',
+                sprintId: 'spr-002',
+                title: 'Create product search functionality',
+                description: 'As a customer, I want to search and filter products so that I can find what I need quickly',
+                priority: 'high',
+                status: 'pending',
+                storyPoints: 13,
+                assignee: 'Mike Rodriguez',
+                acceptanceCriteria: [
+                    'Text search returns relevant results',
+                    'Category filtering works properly',
+                    'Price range filtering is accurate',
+                    'Search results display within 2 seconds'
+                ],
+                tasks: [
+                    'Search algorithm implementation',
+                    'UI components development',
+                    'Database indexing optimization'
+                ],
+                bugs: []
+            },
+            {
+                id: 'story-003',
+                projectId: 'proj-002',
+                sprintId: 'spr-003',
+                title: 'Biometric login integration',
+                description: 'As a user, I want to login with fingerprint or face recognition so that access is convenient and secure',
+                priority: 'high',
+                status: 'pending',
+                storyPoints: 13,
+                assignee: 'Alex Kim',
+                acceptanceCriteria: [
+                    'Fingerprint authentication works on supported devices',
+                    'Face ID integration on iOS devices',
+                    'Fallback to PIN when biometric fails',
+                    'Security audit passed'
+                ],
+                tasks: [
+                    'iOS biometric integration',
+                    'Android biometric integration',
+                    'Security testing implementation'
+                ],
+                bugs: []
+            },
+            {
+                id: 'story-004',
+                projectId: 'proj-001',
+                sprintId: 'spr-002',
+                title: 'Shopping cart persistence',
+                description: 'As a customer, I want my shopping cart to persist across sessions so that I don\'t lose items',
+                priority: 'medium',
+                status: 'done',
+                storyPoints: 5,
+                assignee: 'Emma Davis',
+                acceptanceCriteria: [
+                    'Cart items saved to user account',
+                    'Cart restored on login',
+                    'Guest cart handled properly',
+                    'Cart expiration after 30 days'
+                ],
+                tasks: [
+                    'Database schema update',
+                    'Cart synchronization logic',
+                    'Session management'
+                ],
+                bugs: []
+            },
+            {
+                id: 'story-005',
+                projectId: 'proj-001',
+                sprintId: 'spr-002',
+                title: 'Product review system',
+                description: 'As a customer, I want to read and write product reviews so that I can make informed decisions',
+                priority: 'medium',
+                status: 'pending',
+                storyPoints: 8,
+                assignee: 'Sarah Chen',
+                acceptanceCriteria: [
+                    'Users can submit reviews with ratings',
+                    'Reviews display with helpful/not helpful votes',
+                    'Moderation system for inappropriate content',
+                    'Average rating calculations accurate'
+                ],
+                tasks: [
+                    'Review submission form',
+                    'Rating calculation system',
+                    'Moderation dashboard'
+                ],
+                bugs: []
+            },
+            {
+                id: 'story-006',
+                projectId: 'proj-002',
+                sprintId: 'spr-003',
+                title: 'Transaction history export',
+                description: 'As a user, I want to export my transaction history so that I can keep personal records',
+                priority: 'low',
+                status: 'done',
+                storyPoints: 3,
+                assignee: 'Mike Rodriguez',
+                acceptanceCriteria: [
+                    'PDF export format available',
+                    'CSV export format available',
+                    'Date range selection works',
+                    'Export completes within 10 seconds'
+                ],
+                tasks: [
+                    'PDF generation service',
+                    'CSV export functionality',
+                    'Date picker component'
+                ],
+                bugs: []
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeKanbanPage();
+        });
+
+        function initializeKanbanPage() {
+            // Add extended stories to the global collection
+            window.AgileFlow.userStories = extendedUserStories;
+            
+            renderKanbanBoard();
+            initializeKanbanCharts();
+            setupKanbanEventListeners();
+            setupDragAndDrop();
+        }
+
+        function renderKanbanBoard() {
+            const pendingStories = window.AgileFlow.userStories.filter(s => s.status === 'pending');
+            const doingStories = window.AgileFlow.userStories.filter(s => s.status === 'doing');
+            const doneStories = window.AgileFlow.userStories.filter(s => s.status === 'done');
+
+            renderColumn('pendingColumn', pendingStories);
+            renderColumn('doingColumn', doingStories);
+            renderColumn('doneColumn', doneStories);
+
+            updateColumnCounts();
+        }
+
+        function renderColumn(columnId, stories) {
+            const container = document.getElementById(columnId);
+            if (!container) return;
+
+            container.innerHTML = stories.map(story => {
+                const priorityClass = `priority-${story.priority}`;
+                const project = window.AgileFlow.projects.find(p => p.id === story.projectId);
+                
+                return `
+                    <div class="story-card bg-white rounded-lg shadow-sm border p-4 ${priorityClass}" 
+                         data-story-id="${story.id}" onclick="openStoryDetails('${story.id}')">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-gray-900 text-sm leading-tight flex-1 mr-2">${story.title}</h4>
+                            <div class="story-points text-white text-xs px-2 py-1 rounded-full font-bold">
+                                ${story.storyPoints}
+                            </div>
+                        </div>
+                        
+                        <p class="text-xs text-gray-600 mb-3 line-clamp-2">${story.description}</p>
+                        
+                        <div class="flex justify-between items-center text-xs text-gray-500 mb-2">
+                            <span class="font-medium">${project ? project.name : 'Unknown Project'}</span>
+                            <span class="px-2 py-1 bg-gray-100 rounded text-gray-700 capitalize">${story.priority}</span>
+                        </div>
+                        
+                        ${story.assignee ? `
+                            <div class="flex items-center text-xs text-gray-600">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
+                                </svg>
+                                ${story.assignee}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="flex space-x-1 mt-2">
+                            <button onclick="event.stopPropagation(); openBugModal('${story.id}')" 
+                                    class="flex-1 px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200 transition-colors">
+                                Add Bug
+                            </button>
+                            <button onclick="event.stopPropagation(); openTaskModal('${story.id}')" 
+                                    class="flex-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors">
+                                Add Task
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Animate story cards
+            anime({
+                targets: `#${columnId} .story-card`,
+                translateY: [20, 0],
+                opacity: [0, 1],
+                easing: 'easeOutExpo',
+                duration: 400,
+                delay: (el, i) => 50 * i
+            });
+        }
+
+        function updateColumnCounts() {
+            const pendingCount = window.AgileFlow.userStories.filter(s => s.status === 'pending').length;
+            const doingCount = window.AgileFlow.userStories.filter(s => s.status === 'doing').length;
+            const doneCount = window.AgileFlow.userStories.filter(s => s.status === 'done').length;
+
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('doingCount').textContent = doingCount;
+            document.getElementById('doneCount').textContent = doneCount;
+        }
+
+        function setupDragAndDrop() {
+            const columns = ['pendingColumn', 'doingColumn', 'doneColumn'];
+            
+            columns.forEach(columnId => {
+                const column = document.getElementById(columnId);
+                if (column) {
+                    new Sortable(column, {
+                        group: 'kanban',
+                        animation: 150,
+                        ghostClass: 'opacity-50',
+                        chosenClass: 'shadow-lg',
+                        dragClass: 'shadow-xl',
+                        onStart: function(evt) {
+                            draggedElement = evt.item;
+                        },
+                        onEnd: function(evt) {
+                            const storyId = evt.item.dataset.storyId;
+                            const newStatus = getStatusFromColumn(evt.to.id);
+                            updateStoryStatus(storyId, newStatus);
+                            draggedElement = null;
+                        }
+                    });
+                }
+            });
+        }
+
+        function getStatusFromColumn(columnId) {
+            switch(columnId) {
+                case 'pendingColumn': return 'pending';
+                case 'doingColumn': return 'doing';
+                case 'doneColumn': return 'done';
+                default: return 'pending';
+            }
+        }
+
+        function updateStoryStatus(storyId, newStatus) {
+            const story = window.AgileFlow.userStories.find(s => s.id === storyId);
+            if (story) {
+                story.status = newStatus;
+                updateColumnCounts();
+                
+                // Show notification
+                window.AgileFlow.showNotification(
+                    `Story moved to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`, 
+                    'success'
+                );
+                
+                // Update analytics
+                updateKanbanAnalytics();
+            }
+        }
+
+        function initializeKanbanCharts() {
+            // Story Distribution Chart
+            const distributionChart = echarts.init(document.getElementById('storyDistributionChart'));
+            const distributionOption = {
+                tooltip: {
+                    trigger: 'item'
+                },
+                series: [{
+                    name: 'Stories',
+                    type: 'pie',
+                    radius: '70%',
+                    data: [
+                        { value: 3, name: 'Pending', itemStyle: { color: '#f59e0b' } },
+                        { value: 1, name: 'Doing', itemStyle: { color: '#3b82f6' } },
+                        { value: 2, name: 'Done', itemStyle: { color: '#10b981' } }
+                    ],
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+            distributionChart.setOption(distributionOption);
+            
+            // Priority Breakdown Chart
+            const priorityChart = echarts.init(document.getElementById('priorityChart'));
+            const priorityData = [
+                { value: 3, name: 'High', itemStyle: { color: '#ef4444' } },
+                { value: 2, name: 'Medium', itemStyle: { color: '#f59e0b' } },
+                { value: 1, name: 'Low', itemStyle: { color: '#10b981' } }
+            ];
+            
+            const priorityOption = {
+                tooltip: {
+                    trigger: 'item'
+                },
+                series: [{
+                    name: 'Priority',
+                    type: 'pie',
+                    radius: '70%',
+                    data: priorityData,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+            priorityChart.setOption(priorityOption);
+            
+            // Team Performance Chart
+            const performanceChart = echarts.init(document.getElementById('performanceChart'));
+            const performanceOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Sarah', 'Mike', 'Alex', 'Emma'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#374151'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Story Points',
+                    axisLine: {
+                        lineStyle: {
+                            color: '#374151'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Completed',
+                    type: 'bar',
+                    data: [16, 13, 8, 5],
+                    itemStyle: {
+                        color: '#10b981'
+                    },
+                    barWidth: '60%'
+                }]
+            };
+            performanceChart.setOption(performanceOption);
+            
+            // Make charts responsive
+            window.addEventListener('resize', function() {
+                distributionChart.resize();
+                priorityChart.resize();
+                performanceChart.resize();
+            });
+        }
+
+        function updateKanbanAnalytics() {
+            // Recalculate and update charts with current data
+            // This would be implemented with real data updates
+            console.log('Analytics updated');
+        }
+
+        function setupKanbanEventListeners() {
+            const projectSelect = document.getElementById('projectSelect');
+            const sprintSelect = document.getElementById('sprintSelect');
+            
+            if (projectSelect) {
+                projectSelect.addEventListener('change', filterStoriesByProject);
+            }
+            
+            if (sprintSelect) {
+                sprintSelect.addEventListener('change', filterStoriesBySprint);
+            }
+            
+            const storyForm = document.getElementById('storyForm');
+            if (storyForm) {
+                storyForm.addEventListener('submit', handleStorySubmit);
+            }
+            
+            const bugForm = document.getElementById('bugForm');
+            if (bugForm) {
+                bugForm.addEventListener('submit', handleBugSubmit);
+            }
+            
+            const taskForm = document.getElementById('taskForm');
+            if (taskForm) {
+                taskForm.addEventListener('submit', handleTaskSubmit);
+            }
+        }
+
+        function filterStoriesByProject() {
+            const projectId = document.getElementById('projectSelect').value;
+            // Filter logic would be implemented here
+            window.AgileFlow.showNotification('Project filter applied', 'info');
+        }
+
+        function filterStoriesBySprint() {
+            const sprintId = document.getElementById('sprintSelect').value;
+            // Filter logic would be implemented here
+            window.AgileFlow.showNotification('Sprint filter applied', 'info');
+        }
+
+        // Modal functions
+        function openStoryModal() {
+            const modal = document.getElementById('storyModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [0.8, 1],
+                    opacity: [0, 1],
+                    easing: 'easeOutExpo',
+                    duration: 300
+                });
+            }
+        }
+
+        function closeStoryModal() {
+            const modal = document.getElementById('storyModal');
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    easing: 'easeInExpo',
+                    duration: 200,
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                        document.getElementById('storyForm').reset();
+                    }
+                });
+            }
+        }
+
+        function openStoryDetails(storyId) {
+            currentStory = window.AgileFlow.userStories.find(s => s.id === storyId);
+            if (!currentStory) return;
+            
+            const modal = document.getElementById('storyDetailsModal');
+            
+            // Populate modal content
+            document.getElementById('storyDetailsTitle').textContent = currentStory.title;
+            document.getElementById('storyDetailsDescription').textContent = currentStory.description;
+            
+            // Acceptance criteria
+            const criteriaList = document.getElementById('storyDetailsCriteria');
+            criteriaList.innerHTML = currentStory.acceptanceCriteria.map(criterion => `
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" class="rounded text-teal-600">
+                    <span class="text-sm text-gray-700">${criterion}</span>
+                </div>
+            `).join('');
+            
+            // Tasks
+            const tasksList = document.getElementById('storyDetailsTasks');
+            tasksList.innerHTML = currentStory.tasks.map(task => `
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" class="rounded text-blue-600">
+                    <span class="text-sm text-gray-700">${task}</span>
+                </div>
+            `).join('');
+            
+            // Story info
+            const storyInfo = document.getElementById('storyInfo');
+            const project = window.AgileFlow.projects.find(p => p.id === currentStory.projectId);
+            storyInfo.innerHTML = `
+                <div><strong>Project:</strong> ${project ? project.name : 'Unknown'}</div>
+                <div><strong>Priority:</strong> ${currentStory.priority}</div>
+                <div><strong>Story Points:</strong> ${currentStory.storyPoints}</div>
+                <div><strong>Assignee:</strong> ${currentStory.assignee || 'Unassigned'}</div>
+                <div><strong>Status:</strong> ${currentStory.status}</div>
+            `;
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            anime({
+                targets: modal.querySelector('.bg-white'),
+                scale: [0.8, 1],
+                opacity: [0, 1],
+                easing: 'easeOutExpo',
+                duration: 300
+            });
+        }
+
+        function closeStoryDetailsModal() {
+            const modal = document.getElementById('storyDetailsModal');
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    easing: 'easeInExpo',
+                    duration: 200,
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                        currentStory = null;
+                    }
+                });
+            }
+        }
+
+        function openBugModal(storyId) {
+            currentStory = storyId ? 
+                window.AgileFlow.userStories.find(s => s.id === storyId) : 
+                currentStory;
+            
+            const modal = document.getElementById('bugModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            anime({
+                targets: modal.querySelector('.bg-white'),
+                scale: [0.8, 1],
+                opacity: [0, 1],
+                easing: 'easeOutExpo',
+                duration: 300
+            });
+        }
+
+        function closeBugModal() {
+            const modal = document.getElementById('bugModal');
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    easing: 'easeInExpo',
+                    duration: 200,
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                        document.getElementById('bugForm').reset();
+                    }
+                });
+            }
+        }
+
+        function openTaskModal(storyId) {
+            currentStory = storyId ? 
+                window.AgileFlow.userStories.find(s => s.id === storyId) : 
+                currentStory;
+            
+            const modal = document.getElementById('taskModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            anime({
+                targets: modal.querySelector('.bg-white'),
+                scale: [0.8, 1],
+                opacity: [0, 1],
+                easing: 'easeOutExpo',
+                duration: 300
+            });
+        }
+
+        function closeTaskModal() {
+            const modal = document.getElementById('taskModal');
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    easing: 'easeInExpo',
+                    duration: 200,
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                        document.getElementById('taskForm').reset();
+                    }
+                });
+            }
+        }
+
+        function handleStorySubmit(e) {
+            e.preventDefault();
+            
+            const newStory = {
+                id: 'story-' + Date.now(),
+                projectId: document.getElementById('storyProject').value,
+                sprintId: null,
+                title: document.getElementById('storyTitle').value,
+                description: document.getElementById('storyDescription').value,
+                priority: document.getElementById('storyPriority').value,
+                status: 'pending',
+                storyPoints: parseInt(document.getElementById('storyPoints').value),
+                assignee: document.getElementById('storyAssignee').value || null,
+                acceptanceCriteria: [],
+                tasks: [],
+                bugs: []
+            };
+            
+            window.AgileFlow.userStories.push(newStory);
+            renderKanbanBoard();
+            closeStoryModal();
+            
+            window.AgileFlow.showNotification('User story created successfully!', 'success');
+        }
+
+        function handleBugSubmit(e) {
+            e.preventDefault();
+            
+            if (currentStory) {
+                const newBug = {
+                    id: 'bug-' + Date.now(),
+                    title: document.getElementById('bugTitle').value,
+                    severity: document.getElementById('bugSeverity').value,
+                    steps: document.getElementById('bugSteps').value,
+                    status: 'open'
+                };
+                
+                currentStory.bugs.push(newBug);
+                closeBugModal();
+                
+                window.AgileFlow.showNotification('Bug added to story!', 'success');
+            }
+        }
+
+        function handleTaskSubmit(e) {
+            e.preventDefault();
+            
+            if (currentStory) {
+                const newTask = {
+                    id: 'task-' + Date.now(),
+                    title: document.getElementById('taskTitle').value,
+                    type: document.getElementById('taskType').value,
+                    hours: parseInt(document.getElementById('taskHours').value),
+                    status: 'pending'
+                };
+                
+                currentStory.tasks.push(newTask);
+                closeTaskModal();
+                
+                window.AgileFlow.showNotification('Task added to story!', 'success');
+            }
+        }
+
+        // Story action functions
+        function editStory() {
+            if (currentStory) {
+                window.AgileFlow.showNotification('Edit story functionality - Coming soon!', 'info');
+            }
+        }
+
+        function moveStory() {
+            if (currentStory) {
+                window.AgileFlow.showNotification('Move to sprint functionality - Coming soon!', 'info');
+            }
+        }
+
+        function deleteStory() {
+            if (currentStory) {
+                const index = window.AgileFlow.userStories.findIndex(s => s.id === currentStory.id);
+                if (index > -1) {
+                    window.AgileFlow.userStories.splice(index, 1);
+                    renderKanbanBoard();
+                    closeStoryDetailsModal();
+                    window.AgileFlow.showNotification('Story deleted successfully!', 'success');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgileFlow - Sprint Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sprint-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sprint-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15); }
+        .gradient-text { background: linear-gradient(135deg, #1a365d, #319795); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-link { position: relative; }
+        .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0; background: #f6ad55; transition: width 0.3s ease; }
+        .nav-link:hover::after { width: 100%; }
+        .timeline-item { position: relative; }
+        .timeline-item::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
+        .timeline-item:last-child::before { display: none; }
+        .status-active { background: linear-gradient(135deg, #10b981, #059669); }
+        .status-completed { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .status-planning { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold gradient-text">AgileFlow</h1>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="index.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Dashboard</a>
+                        <a href="sprints.html" class="nav-link text-gray-900 font-medium">Sprints</a>
+                        <a href="kanban.html" class="nav-link text-gray-600 hover:text-gray-900 font-medium">Kanban</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="openSprintModal()" class="bg-amber-400 hover:bg-amber-500 text-gray-900 px-4 py-2 rounded-lg font-medium transition-colors">
+                        New Sprint
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-4">Sprint Management</h1>
+                <p class="text-xl text-teal-100 max-w-3xl mx-auto">
+                    Plan, execute, and track your development sprints with comprehensive analytics and team collaboration tools.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Sprint Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Active Sprints</h3>
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-gray-900 mb-2">3</p>
+                <p class="text-sm text-gray-600">Currently running</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Avg Velocity</h3>
+                    <div class="p-2 bg-amber-100 rounded-lg">
+                        <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-gray-900 mb-2">27</p>
+                <p class="text-sm text-gray-600">Story points/sprint</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Completion Rate</h3>
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-gray-900 mb-2">89%</p>
+                <p class="text-sm text-gray-600">On-time delivery</p>
+            </div>
+        </div>
+
+        <!-- Active Sprints -->
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Active Sprints</h2>
+                <div class="flex space-x-4">
+                    <select id="projectFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="all">All Projects</option>
+                        <option value="proj-001">E-commerce Platform</option>
+                        <option value="proj-002">Mobile Banking App</option>
+                        <option value="proj-003">Healthcare Portal</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="activeSprints" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Active sprints will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Sprint Timeline -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Sprint Timeline</h2>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div id="timelineContainer" class="space-y-6">
+                    <!-- Timeline items will be rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Sprint Analytics</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Burndown Chart</h3>
+                    <div id="burndownChart" style="height: 300px;"></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Velocity Trend</h3>
+                    <div id="velocityTrendChart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Sprint Creation Modal -->
+    <div id="sprintModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 transform transition-all">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">Create New Sprint</h3>
+                    <button onclick="closeSprintModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form id="sprintForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sprint Name</label>
+                        <input type="text" id="sprintName" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                        <select id="sprintProject" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                            <option value="">Select Project</option>
+                            <option value="proj-001">E-commerce Platform</option>
+                            <option value="proj-002">Mobile Banking App</option>
+                            <option value="proj-003">Healthcare Portal</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                            <input type="date" id="sprintStartDate" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                            <input type="date" id="sprintEndDate" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sprint Goals</label>
+                        <textarea id="sprintGoals" rows="3" placeholder="Enter sprint goals, one per line"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"></textarea>
+                    </div>
+                    <div class="flex space-x-3 pt-4">
+                        <button type="button" onclick="closeSprintModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
+                            Create Sprint
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sprint Details Modal -->
+    <div id="sprintDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 transform transition-all max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="sprintDetailsTitle" class="text-2xl font-semibold text-gray-900"></h3>
+                    <button onclick="closeSprintDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Sprint Goals</h4>
+                            <div id="sprintGoalsList" class="space-y-2">
+                                <!-- Sprint goals will be rendered here -->
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">User Stories</h4>
+                            <div id="sprintStoriesList" class="space-y-3">
+                                <!-- User stories will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Sprint Info</h4>
+                            <div id="sprintInfo" class="space-y-2 text-sm">
+                                <!-- Sprint information will be rendered here -->
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3">Actions</h4>
+                            <div class="space-y-2">
+                                <button onclick="startSprint()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                    Start Sprint
+                                </button>
+                                <button onclick="pauseSprint()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+                                    Pause Sprint
+                                </button>
+                                <button onclick="completeSprint()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    Complete Sprint
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2024 AgileFlow. Streamlining agile project management for modern teams.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+    <script>
+        // Sprint-specific functionality
+        let currentSprint = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSprintsPage();
+        });
+
+        function initializeSprintsPage() {
+            renderActiveSprints();
+            renderSprintTimeline();
+            initializeSprintCharts();
+            setupSprintEventListeners();
+        }
+
+        function renderActiveSprints() {
+            const activeSprints = window.AgileFlow.sprints.filter(sprint => sprint.status === 'active');
+            const container = document.getElementById('activeSprints');
+            
+            if (!container) return;
+            
+            container.innerHTML = activeSprints.map(sprint => {
+                const project = window.AgileFlow.projects.find(p => p.id === sprint.projectId);
+                const progress = (sprint.completedStories / sprint.velocity) * 100;
+                
+                return `
+                    <div class="sprint-card bg-white rounded-xl shadow-lg p-6 cursor-pointer" 
+                         onclick="openSprintDetails('${sprint.id}')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-1">${sprint.name}</h3>
+                                <p class="text-sm text-gray-600">${project ? project.name : 'Unknown Project'}</p>
+                            </div>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                                Active
+                            </span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Progress</span>
+                                <span class="text-sm font-semibold text-gray-900">${Math.round(progress)}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-teal-600 h-2 rounded-full transition-all duration-1000" 
+                                     style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-gray-900">${sprint.completedStories}</p>
+                                <p class="text-xs text-gray-600">Completed</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-gray-900">${sprint.velocity - sprint.completedStories}</p>
+                                <p class="text-xs text-gray-600">Remaining</p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600">
+                            <p><strong>Duration:</strong> ${sprint.duration}</p>
+                            <p><strong>End Date:</strong> ${window.AgileFlow.formatDate(sprint.endDate)}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Animate sprint cards
+            anime({
+                targets: '.sprint-card',
+                translateY: [30, 0],
+                opacity: [0, 1],
+                easing: 'easeOutExpo',
+                duration: 600,
+                delay: (el, i) => 100 * i
+            });
+        }
+
+        function renderSprintTimeline() {
+            const allSprints = window.AgileFlow.sprints.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+            const container = document.getElementById('timelineContainer');
+            
+            if (!container) return;
+            
+            container.innerHTML = allSprints.map(sprint => {
+                const project = window.AgileFlow.projects.find(p => p.id === sprint.projectId);
+                const statusClass = sprint.status === 'active' ? 'status-active' : 
+                                  sprint.status === 'completed' ? 'status-completed' : 'status-planning';
+                
+                return `
+                    <div class="timeline-item flex items-start space-x-4 pb-6">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full ${statusClass} flex items-center justify-center">
+                            <div class="w-3 h-3 bg-white rounded-full"></div>
+                        </div>
+                        <div class="flex-1 bg-gray-50 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-900">${sprint.name}</h4>
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold ${
+                                    sprint.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    sprint.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                                    'bg-blue-100 text-blue-800'
+                                }">
+                                    ${sprint.status.charAt(0).toUpperCase() + sprint.status.slice(1)}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">${project ? project.name : 'Unknown Project'}</p>
+                            <div class="flex space-x-4 text-sm text-gray-500">
+                                <span>Start: ${window.AgileFlow.formatDate(sprint.startDate)}</span>
+                                <span>End: ${window.AgileFlow.formatDate(sprint.endDate)}</span>
+                                <span>Velocity: ${sprint.velocity} pts</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function initializeSprintCharts() {
+            // Burndown Chart
+            const burndownChart = echarts.init(document.getElementById('burndownChart'));
+            const burndownOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['Ideal', 'Actual']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Story Points'
+                },
+                series: [
+                    {
+                        name: 'Ideal',
+                        type: 'line',
+                        data: [31, 28, 25, 22, 19, 16, 13, 10, 7, 4, 0],
+                        itemStyle: { color: '#e5e7eb' },
+                        lineStyle: { type: 'dashed' }
+                    },
+                    {
+                        name: 'Actual',
+                        type: 'line',
+                        data: [31, 29, 26, 24, 20, 18, 15, 11, 8, 6, 2],
+                        itemStyle: { color: '#319795' }
+                    }
+                ]
+            };
+            burndownChart.setOption(burndownOption);
+            
+            // Velocity Trend Chart
+            const velocityChart = echarts.init(document.getElementById('velocityTrendChart'));
+            const velocityOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Story Points'
+                },
+                series: [{
+                    name: 'Velocity',
+                    type: 'bar',
+                    data: [24, 31, 28, 35, 29, 33],
+                    itemStyle: {
+                        color: '#f6ad55'
+                    },
+                    barWidth: '60%'
+                }]
+            };
+            velocityChart.setOption(velocityOption);
+            
+            // Make charts responsive
+            window.addEventListener('resize', function() {
+                burndownChart.resize();
+                velocityChart.resize();
+            });
+        }
+
+        function setupSprintEventListeners() {
+            const projectFilter = document.getElementById('projectFilter');
+            if (projectFilter) {
+                projectFilter.addEventListener('change', filterSprintsByProject);
+            }
+            
+            const sprintForm = document.getElementById('sprintForm');
+            if (sprintForm) {
+                sprintForm.addEventListener('submit', handleSprintSubmit);
+            }
+        }
+
+        function filterSprintsByProject() {
+            const projectId = document.getElementById('projectFilter').value;
+            // Filter logic would be implemented here
+            window.AgileFlow.showNotification('Filter applied: ' + (projectId || 'All projects'), 'info');
+        }
+
+        // Modal functions
+        function openSprintModal() {
+            const modal = document.getElementById('sprintModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [0.8, 1],
+                    opacity: [0, 1],
+                    easing: 'easeOutExpo',
+                    duration: 300
+                });
+            }
+        }
+
+        function closeSprintModal() {
+            const modal = document.getElementById('sprintModal');
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    easing: 'easeInExpo',
+                    duration: 200,
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                        document.getElementById('sprintForm').reset();
+                    }
+                });
+            }
+        }
+
+        function openSprintDetails(sprintId) {
+            currentSprint = window.AgileFlow.sprints.find(s => s.id === sprintId);
+            if (!currentSprint) return;
+            
+            const modal = document.getElementById('sprintDetailsModal');
+            const project = window.AgileFlow.projects.find(p => p.id === currentSprint.projectId);
+            
+            // Populate modal content
+            document.getElementById('sprintDetailsTitle').textContent = currentSprint.name;
+            
+            // Sprint goals
+            const goalsList = document.getElementById('sprintGoalsList');
+            goalsList.innerHTML = currentSprint.goals.map(goal => `
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" class="rounded text-teal-600">
+                    <span class="text-sm text-gray-700">${goal}</span>
+                </div>
+            `).join('');
+            
+            // Sprint info
+            const sprintInfo = document.getElementById('sprintInfo');
+            sprintInfo.innerHTML = `
+                <div><strong>Project:</strong> ${project ? project.name : 'Unknown'}</div>
+                <div><strong>Duration:</strong> ${currentSprint.duration}</div>
+                <div><strong>Start Date:</strong> ${window.AgileFlow.formatDate(currentSprint.startDate)}</div>
+                <div><strong>End Date:</strong> ${window.AgileFlow.formatDate(currentSprint.endDate)}</div>
+                <div><strong>Status:</strong> ${currentSprint.status}</div>
+                <div><strong>Target Velocity:</strong> ${currentSprint.velocity} points</div>
+            `;
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            anime({
+                targets: modal.querySelector('.bg-white'),
+                scale: [0.8, 1],
+                opacity: [0, 1],
+                easing: 'easeOutExpo',
+                duration: 300
+            });
+        }
+
+        function closeSprintDetailsModal() {
+            const modal = document.getElementById('sprintDetailsModal');
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    easing: 'easeInExpo',
+                    duration: 200,
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                        currentSprint = null;
+                    }
+                });
+            }
+        }
+
+        function handleSprintSubmit(e) {
+            e.preventDefault();
+            
+            const goals = document.getElementById('sprintGoals').value.split('\n').filter(g => g.trim());
+            const newSprint = {
+                id: 'spr-' + Date.now(),
+                projectId: document.getElementById('sprintProject').value,
+                name: document.getElementById('sprintName').value,
+                duration: '2 weeks', // Default duration
+                status: 'planning',
+                startDate: document.getElementById('sprintStartDate').value,
+                endDate: document.getElementById('sprintEndDate').value,
+                goals: goals,
+                velocity: 0,
+                completedStories: 0
+            };
+            
+            window.AgileFlow.sprints.push(newSprint);
+            renderActiveSprints();
+            renderSprintTimeline();
+            closeSprintModal();
+            
+            window.AgileFlow.showNotification('Sprint created successfully!', 'success');
+        }
+
+        // Sprint actions
+        function startSprint() {
+            if (currentSprint) {
+                currentSprint.status = 'active';
+                window.AgileFlow.showNotification('Sprint started!', 'success');
+                closeSprintDetailsModal();
+                renderActiveSprints();
+                renderSprintTimeline();
+            }
+        }
+
+        function pauseSprint() {
+            if (currentSprint) {
+                currentSprint.status = 'paused';
+                window.AgileFlow.showNotification('Sprint paused!', 'warning');
+                closeSprintDetailsModal();
+                renderActiveSprints();
+                renderSprintTimeline();
+            }
+        }
+
+        function completeSprint() {
+            if (currentSprint) {
+                currentSprint.status = 'completed';
+                window.AgileFlow.showNotification('Sprint completed!', 'success');
+                closeSprintDetailsModal();
+                renderActiveSprints();
+                renderSprintTimeline();
+            }
+        }
+    </script>
+</body>
+</html>
