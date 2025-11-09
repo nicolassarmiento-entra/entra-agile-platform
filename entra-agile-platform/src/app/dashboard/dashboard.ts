@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ProjectService } from '../project.service';
 import { ProjectCardComponent } from '../project-card/project-card';
 import { ProjectModalComponent } from '../project-modal/project-modal';
-import anime from 'animejs/lib/anime.es.js';
+import { animate } from 'animejs';
 import Typed from 'typed.js';
 import Splitting from 'splitting';
 import * as echarts from 'echarts';
@@ -37,13 +37,12 @@ export class DashboardComponent implements AfterViewInit {
   private initializeAnimations() {
     Splitting();
 
-    anime({
-      targets: '.splitting-text .char',
+    animate('.splitting-text .char', {
       translateY: [100, 0],
       opacity: [0, 1],
       easing: 'easeOutExpo',
       duration: 1400,
-      delay: (el, i) => 30 * i,
+      delay: (_el: any, i: number) => 30 * i,
     });
 
     new Typed('#typed-text', {

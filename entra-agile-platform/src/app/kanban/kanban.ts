@@ -1,9 +1,9 @@
 import { Component, inject, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserStoryService } from '../user-story.service';
-import anime from 'animejs/lib/anime.es.js';
+import * as anime from 'animejs';
 import * as echarts from 'echarts';
-import Sortable from 'sortablejs';
+import Sortable, { SortableEvent } from 'sortablejs';
 
 @Component({
   selector: 'app-kanban',
@@ -153,9 +153,9 @@ export class KanbanComponent implements AfterViewInit {
           ghostClass: 'opacity-50',
           chosenClass: 'shadow-lg',
           dragClass: 'shadow-xl',
-          onEnd: (evt) => {
+          onEnd: (evt: SortableEvent) => {
             const storyId = evt.item.dataset['storyId'];
-            const newStatus = this.getStatusFromColumn(evt.to.id);
+            const newStatus = this.getStatusFromColumn(evt.to!.id);
             if (storyId) {
               this.updateStoryStatus(storyId, newStatus);
             }
