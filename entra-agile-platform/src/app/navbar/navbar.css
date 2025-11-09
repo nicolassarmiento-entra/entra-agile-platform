@@ -1,0 +1,22 @@
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background: #f6ad55;
+  transition: width 0.3s ease;
+}
+.nav-link:hover::after,
+.nav-link.text-gray-900::after {
+  width: 100%;
+}
+.gradient-text {
+  background: linear-gradient(135deg, #1a365d, #319795);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

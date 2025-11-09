@@ -1,0 +1,39 @@
+.kanban-column {
+  min-height: 600px;
+}
+.story-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+}
+.story-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+.story-card:active {
+  cursor: grabbing;
+}
+.priority-high {
+  border-left: 4px solid #ef4444;
+}
+.priority-medium {
+  border-left: 4px solid #f59e0b;
+}
+.priority-low {
+  border-left: 4px solid #10b981;
+}
+.column-pending {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+.column-doing {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+}
+.column-done {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+}
+.drag-over {
+  background-color: rgba(49, 151, 149, 0.1);
+  border: 2px dashed #319795;
+}
+.story-points {
+  background: linear-gradient(135deg, #f6ad55, #ed8936);
+}

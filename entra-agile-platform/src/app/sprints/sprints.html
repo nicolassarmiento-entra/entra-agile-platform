@@ -1,0 +1,130 @@
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center">
+      <h1 class="text-4xl font-bold mb-4">Sprint Management</h1>
+      <p class="text-xl text-teal-100 max-w-3xl mx-auto">
+        Plan, execute, and track your development sprints with comprehensive
+        analytics and team collaboration tools.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <!-- Sprint Overview -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Active Sprints</h3>
+        <div class="p-2 bg-green-100 rounded-lg">
+          <svg
+            class="w-6 h-6 text-green-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
+      <p class="text-3xl font-bold text-gray-900 mb-2">3</p>
+      <p class="text-sm text-gray-600">Currently running</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Avg Velocity</h3>
+        <div class="p-2 bg-amber-100 rounded-lg">
+          <svg
+            class="w-6 h-6 text-amber-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
+      <p class="text-3xl font-bold text-gray-900 mb-2">27</p>
+      <p class="text-sm text-gray-600">Story points/sprint</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Completion Rate</h3>
+        <div class="p-2 bg-blue-100 rounded-lg">
+          <svg
+            class="w-6 h-6 text-blue-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
+      <p class="text-3xl font-bold text-gray-900 mb-2">89%</p>
+      <p class="text-sm text-gray-600">On-time delivery</p>
+    </div>
+  </div>
+
+  <!-- Active Sprints -->
+  <section class="mb-12">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-900">Active Sprints</h2>
+      <div class="flex space-x-4">
+        <select
+          id="projectFilter"
+          class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        >
+          <option value="all">All Projects</option>
+          <option value="proj-001">E-commerce Platform</option>
+          <option value="proj-002">Mobile Banking App</option>
+          <option value="proj-003">Healthcare Portal</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="activeSprints" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Active sprints will be rendered here -->
+    </div>
+  </section>
+
+  <!-- Sprint Timeline -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Sprint Timeline</h2>
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <div id="timelineContainer" class="space-y-6">
+        <!-- Timeline items will be rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Analytics -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Sprint Analytics</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Burndown Chart</h3>
+        <div id="burndownChart" style="height: 300px"></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Velocity Trend
+        </h3>
+        <div id="velocityTrendChart" style="height: 300px"></div>
+      </div>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,126 @@
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold">Kanban Board</h1>
+        <p class="text-teal-100 mt-2">
+          Manage user stories with drag-and-drop simplicity
+        </p>
+      </div>
+      <div class="flex space-x-4">
+        <select
+          id="projectSelect"
+          class="px-4 py-2 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-amber-400"
+        >
+          <option value="all">All Projects</option>
+          <option value="proj-001">E-commerce Platform</option>
+          <option value="proj-002">Mobile Banking App</option>
+          <option value="proj-003">Healthcare Portal</option>
+        </select>
+        <select
+          id="sprintSelect"
+          class="px-4 py-2 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-amber-400"
+        >
+          <option value="all">All Sprints</option>
+          <option value="spr-002">Sprint 2: Core Features</option>
+          <option value="spr-003">Sprint 1: Security & Auth</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Kanban Board -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Pending Column -->
+    <div class="kanban-column">
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="column-pending px-4 py-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">Pending</h3>
+            <span
+              id="pendingCount"
+              class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium"
+              >0</span
+            >
+          </div>
+          <p class="text-sm text-gray-600 mt-1">
+            User stories waiting to be started
+          </p>
+        </div>
+        <div id="pendingColumn" class="p-4 space-y-3 min-h-96">
+          <!-- Stories will be rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Doing Column -->
+    <div class="kanban-column">
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="column-doing px-4 py-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">Doing</h3>
+            <span
+              id="doingCount"
+              class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium"
+              >0</span
+            >
+          </div>
+          <p class="text-sm text-gray-600 mt-1">
+            Stories currently in progress
+          </p>
+        </div>
+        <div id="doingColumn" class="p-4 space-y-3 min-h-96">
+          <!-- Stories will be rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Done Column -->
+    <div class="kanban-column">
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="column-done px-4 py-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">Done</h3>
+            <span
+              id="doneCount"
+              class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-medium"
+              >0</span
+            >
+          </div>
+          <p class="text-sm text-gray-600 mt-1">Completed user stories</p>
+        </div>
+        <div id="doneColumn" class="p-4 space-y-3 min-h-96">
+          <!-- Stories will be rendered here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Section -->
+  <section class="mt-12">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Board Analytics</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Story Distribution
+        </h3>
+        <div id="storyDistributionChart" style="height: 250px"></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Priority Breakdown
+        </h3>
+        <div id="priorityChart" style="height: 250px"></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Team Performance
+        </h3>
+        <div id="performanceChart" style="height: 250px"></div>
+      </div>
+    </div>
+  </section>
+</main>
