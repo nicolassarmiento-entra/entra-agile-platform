@@ -23,7 +23,7 @@ const sampleProjects: Project[] = [
         teamSize: '8-12',
         deadline: '2024-12-15',
         progress: 75,
-        image: 'resources/project-ecommerce.jpg',
+        image: 'assets/project-ecommerce.jpg',
         sprints: 3,
         stories: 24,
         created: '2024-09-01'
@@ -36,7 +36,7 @@ const sampleProjects: Project[] = [
         teamSize: '4-7',
         deadline: '2024-11-30',
         progress: 60,
-        image: 'resources/project-banking.jpg',
+        image: 'assets/project-banking.jpg',
         sprints: 2,
         stories: 18,
         created: '2024-09-15'
@@ -49,7 +49,7 @@ const sampleProjects: Project[] = [
         teamSize: '12+',
         deadline: '2025-02-28',
         progress: 25,
-        image: 'resources/project-healthcare.jpg',
+        image: 'assets/project-healthcare.jpg',
         sprints: 1,
         stories: 8,
         created: '2024-10-01'
@@ -62,7 +62,7 @@ const sampleProjects: Project[] = [
         teamSize: '8-12',
         deadline: '2024-12-31',
         progress: 45,
-        image: 'resources/project-education.jpg',
+        image: 'assets/project-education.jpg',
         sprints: 2,
         stories: 31,
         created: '2024-08-20'
@@ -75,7 +75,7 @@ const sampleProjects: Project[] = [
         teamSize: '4-7',
         deadline: '2024-11-15',
         progress: 85,
-        image: 'resources/project-analytics.jpg',
+        image: 'assets/project-analytics.jpg',
         sprints: 3,
         stories: 22,
         created: '2024-07-10'
@@ -88,7 +88,7 @@ const sampleProjects: Project[] = [
         teamSize: '1-3',
         deadline: '2024-10-31',
         progress: 100,
-        image: 'resources/project-social.jpg',
+        image: 'assets/project-social.jpg',
         sprints: 4,
         stories: 35,
         created: '2024-06-01'
